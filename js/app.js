@@ -61,6 +61,34 @@ export default class Sketch {
       progress2: 0,
       progress3: 0,
       progress4: 0,
+      go: () => {
+        const timeline = gsap.timeline({
+          defaults: {
+            ease: "expo.out",
+          },
+          onComplete: (self) => {
+            // reset animation
+            this.textMaterial.uniforms.uProgress.value = 0
+            this.textMaterial.uniforms.uProgress2.value = 0
+            this.textMaterial.uniforms.uProgress3.value = 0
+            this.textMaterial.uniforms.uProgress4.value = 0
+          },
+        })
+
+        timeline.to(
+          [
+            this.textMaterial.uniforms.uProgress,
+            this.textMaterial.uniforms.uProgress2,
+            this.textMaterial.uniforms.uProgress3,
+            this.textMaterial.uniforms.uProgress4,
+          ],
+          {
+            value: 1,
+            duration: 3.5,
+            stagger: 0.25,
+          }
+        )
+      },
     }
     this.gui = new gui()
     this.gui.add(this.settings, "progress", 0, 1, 0.01).onChange((value) => {
@@ -76,6 +104,8 @@ export default class Sketch {
     this.gui.add(this.settings, "progress4", 0, 1, 0.01).onChange((value) => {
       this.textMaterial.uniforms.uProgress4.value = value
     })
+
+    this.gui.add(this.settings, "go")
   }
 
   setupResize() {

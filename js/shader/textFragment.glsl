@@ -14,6 +14,9 @@ uniform vec3 uStrokeColor;
 uniform float uStrokeOutsetWidth;
 uniform float uStrokeInsetWidth;
 uniform float uProgress;
+uniform float uProgress2;
+uniform float uProgress3;
+uniform float uProgress4;
 uniform float time;
 
 // Utils: Median
@@ -42,6 +45,26 @@ float noise(vec2 n) {
 float map(float value, float min1, float max1, float min2, float max2) {
   return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
 }
+
+
+
+vec4 newMix (float progress, float noise, vec4 layer, vec4 intialMix) {
+    float width = 0.5;
+	// map that ranges so gradient starts transparent then grows with progress
+	progress = map(progress, 0., 1., -width, 1.);
+	// use the progress to animate the black gradient along the x axis
+	float newProgress = smoothstep(progress, progress + width, vLayoutUv.x);
+
+	// mix the noise with the gradient to create the final pattern 
+	float patternProgress = 2. * newProgress - noise;
+    // clamp the pattern to 0-1
+    patternProgress = clamp(patternProgress, 0., 1.);
+    // 1. - patternProgress to animate in
+    
+    
+    return mix(intialMix, layer, 1. -patternProgress);
+}
+
 
 void main() {
     // Common
@@ -115,7 +138,17 @@ void main() {
 
 	// mix the noise with the gradient to create the final pattern 
 	float patternProgress = 2. * newProgress - newNoise;
+    // clamp the pattern to 0-1
     patternProgress = clamp(patternProgress, 0., 1.);
+
+  //  vec4 whiteStrokeMix = mix(vec4(0.), whiteStrokeText, 1. -patternProgress);
+    vec4 pinkStrokeMix = newMix(uProgress, newNoise, greyStrokeText, vec4(0.));
+    vec4 whiteStrokeMix = newMix(uProgress2, newNoise, whiteStrokeText, pinkStrokeMix);
+    vec4 pinkColorMix = newMix(uProgress3, newNoise, pinkColor, whiteStrokeMix);
+    vec4 whiteColorMix = newMix(uProgress4, newNoise, whiteText, pinkColorMix);
+
+
+    vec4 finalMix = whiteColorMix;
 
 
 
@@ -126,6 +159,6 @@ void main() {
     // gl_FragColor = vec4(vec3(patternProgress), 1.);
 
     // outline noise pattern
-    gl_FragColor = mix(vec4(0.), whiteStrokeText, 1. -patternProgress); // animate in
+    gl_FragColor = finalMix; // animate in
     //gl_FragColor = mix(vec4(0.), whiteStrokeText, patternProgress); // animate out
 }
